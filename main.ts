@@ -18,6 +18,10 @@ function BOOM (bomb: Sprite) {
                 tiles.setWallAt(tiles.getTileLocation(tiles.locationXY(tiles.locationOfSprite(bomb), tiles.XY.column) - 2 + x, tiles.locationXY(tiles.locationOfSprite(bomb), tiles.XY.row) - 2 + y), false)
             }
         }
+        for (let value of spriteutils.getSpritesWithin(SpriteKind.Player, 32, bomb)) {
+            scene.cameraShake(4, 500)
+            info.changeLifeBy(-1)
+        }
         bomb.destroy()
         for (let index = 0; index < 10; index++) {
             new_effect = sprites.create(img`
@@ -38,8 +42,8 @@ function BOOM (bomb: Sprite) {
 }
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (gameStarted) {
-        if (robin.isHittingTile(CollisionDirection.Bottom)) {
-            spriteutils.jumpImpulse(robin, 18)
+        if (Wilson.isHittingTile(CollisionDirection.Bottom)) {
+            spriteutils.jumpImpulse(Wilson, 18)
         }
     }
 })
@@ -99,7 +103,7 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
         bomb,
         0,
         0,
-        robin
+        Wilson
         )
         bomb.startEffect(effects.warmRadial, bomb_prime_time)
         bomb.ay = GRAVITY
@@ -139,14 +143,14 @@ scene.onOverlapTile(SpriteKind.ZigZaggers, assets.tile`tile4`, function (sprite,
         make_a_room(tiles.locationXY(location, tiles.XY.column), tiles.locationXY(location, tiles.XY.row), 10, 6)
     } else if (rng.percentChance(5)) {
         offshoot_bricklayer = sprites.create(img`
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
-            3 3 3 3 3 3 3 3 
+            f c f c f c f c 
+            c a b b b b a f 
+            f b b b b b b c 
+            c b b b b b b f 
+            f b b b b b b c 
+            c b b b b b b f 
+            f a b b b b a c 
+            c f c f c f c f 
             `, SpriteKind.ZigZaggers)
         tiles.placeOnTile(offshoot_bricklayer, location)
         offshoot_bricklayer.setVelocity(rng.randomElement([-1, 1]) * rng.randomRange(80, 100), 0)
@@ -155,11 +159,11 @@ scene.onOverlapTile(SpriteKind.ZigZaggers, assets.tile`tile4`, function (sprite,
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (gameStarted) {
-        characterAnimations.setCharacterAnimationsEnabled(robin, false)
-        sprites.setDataBoolean(robin, "attacking", true)
-        if (characterAnimations.matchesRule(robin, characterAnimations.rule(Predicate.FacingRight))) {
+        characterAnimations.setCharacterAnimationsEnabled(Wilson, false)
+        sprites.setDataBoolean(Wilson, "attacking", true)
+        if (characterAnimations.matchesRule(Wilson, characterAnimations.rule(Predicate.FacingRight))) {
             animation.runImageAnimation(
-            robin,
+            Wilson,
             [img`
                 . . . . . . . . . . 
                 . . . . . . . . . . 
@@ -210,7 +214,7 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             )
         } else {
             animation.runImageAnimation(
-            robin,
+            Wilson,
             [img`
                 . . . . . . . . . . 
                 . . . . . . . . . . 
@@ -261,8 +265,8 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             )
         }
         pause(400)
-        sprites.setDataBoolean(robin, "attacking", false)
-        characterAnimations.setCharacterAnimationsEnabled(robin, true)
+        sprites.setDataBoolean(Wilson, "attacking", false)
+        characterAnimations.setCharacterAnimationsEnabled(Wilson, true)
     }
 })
 /**
@@ -306,14 +310,14 @@ function generate_new_level () {
     make_a_room(tiles.locationXY(top_of_level_door, tiles.XY.column) - width_of_room / 2, tiles.locationXY(top_of_level_door, tiles.XY.row) - height_of_room / 2, width_of_room, height_of_room)
     tiles.setTileAt(top_of_level_door, assets.tile`myTile1`)
     bricklayer = sprites.create(img`
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
-        3 3 3 3 3 3 3 3 
+        f c f c f c f c 
+        c a b b b b a f 
+        f b b b b b b c 
+        c b b b b b b f 
+        f b b b b b b c 
+        c b b b b b b f 
+        f a b b b b a c 
+        c f c f c f c f 
         `, SpriteKind.ZigZaggers)
     tiles.placeOnTile(bricklayer, top_of_level_door)
     bricklayer.setBounceOnWall(true)
@@ -357,7 +361,6 @@ scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
 })
 let new_treasure: Sprite = null
 let new_snake: Sprite = null
-let SimpleOverflowFix = 0
 let end_room_height = 0
 let bricklayer: Sprite = null
 let width_of_room = 0
@@ -366,10 +369,10 @@ let top_of_level_door: tiles.Location = null
 let level: tiles.WorldMap = null
 let offshoot_bricklayer: Sprite = null
 let rng: FastRandomBlocks = null
-let robin: Sprite = null
+let Wilson: Sprite = null
 let gameStarted = false
-let bomb: Sprite = null
 let new_effect: Sprite = null
+let bomb: Sprite = null
 let bomb_prime_time = 0
 let damage_cooldown_time = 0
 let sprite_move_speed = 0
@@ -519,22 +522,19 @@ game.onUpdate(function () {
         }
         for (let value of tiles.getTilesByType(assets.tile`transparency8`)) {
             if (rng.percentChance(1)) {
-                if (SimpleOverflowFix < 5) {
-                    new_snake = sprites.create(img`
-                        . . . . . . . . 
-                        . . . . . . . . 
-                        . . . . . . . . 
-                        . . . . . . . . 
-                        7 7 . . . . . . 
-                        f 7 7 . . . . . 
-                        . 6 7 7 . 7 7 7 
-                        . . 6 7 7 6 6 6 
-                        `, SpriteKind.Snake)
-                    tiles.placeOnTile(new_snake, value)
-                    new_snake.ay = GRAVITY
-                    new_snake.vx = rng.randomElement([-1, 1]) * 10
-                    SimpleOverflowFix += 1
-                }
+                new_snake = sprites.create(img`
+                    . . . . . . . . 
+                    . . . . . . . . 
+                    . . . . . . . . 
+                    . . . . . . . . 
+                    7 7 . . . . . . 
+                    f 7 7 . . . . . 
+                    . 6 7 7 . 7 7 7 
+                    . . 6 7 7 6 6 6 
+                    `, SpriteKind.Snake)
+                tiles.placeOnTile(new_snake, value)
+                new_snake.ay = GRAVITY
+                new_snake.vx = rng.randomElement([-1, 1]) * 10
             } else if (rng.percentChance(1)) {
                 new_treasure = sprites.create(img`
                     . . . . . . . 
@@ -551,7 +551,7 @@ game.onUpdate(function () {
                 sprites.setDataNumber(new_treasure, "value", 100)
             }
         }
-        robin = sprites.create(img`
+        Wilson = sprites.create(img`
             . . . . . . . . . . 
             . . 2 2 . . . . . . 
             . 2 . . 2 . . . . . 
@@ -563,12 +563,12 @@ game.onUpdate(function () {
             . . . 2 2 2 2 . . . 
             . . . 2 . . 2 . . . 
             `, SpriteKind.Player)
-        tiles.placeOnTile(robin, top_of_level_door)
-        scene.cameraFollowSprite(robin)
-        controller.moveSprite(robin, sprite_move_speed, 0)
-        robin.ay = GRAVITY
+        tiles.placeOnTile(Wilson, top_of_level_door)
+        scene.cameraFollowSprite(Wilson)
+        controller.moveSprite(Wilson, sprite_move_speed, 0)
+        Wilson.ay = GRAVITY
         characterAnimations.loopFrames(
-        robin,
+        Wilson,
         [img`
             . . . . . . . . . . 
             . . . . . . . . . . 
@@ -596,7 +596,7 @@ game.onUpdate(function () {
         characterAnimations.rule(Predicate.MovingRight)
         )
         characterAnimations.loopFrames(
-        robin,
+        Wilson,
         [img`
             . . . . . . . . . . 
             . . . . . . . . . . 
@@ -624,7 +624,7 @@ game.onUpdate(function () {
         characterAnimations.rule(Predicate.MovingLeft)
         )
         characterAnimations.loopFrames(
-        robin,
+        Wilson,
         [img`
             . . . . . . . . . . 
             . . . . . . . . . . 
@@ -641,7 +641,7 @@ game.onUpdate(function () {
         characterAnimations.rule(Predicate.NotMoving, Predicate.FacingLeft)
         )
         characterAnimations.loopFrames(
-        robin,
+        Wilson,
         [img`
             . . . . . . . . . . 
             . . . . . . . . . . 
