@@ -1,0 +1,14 @@
+{
+    "anim1": {
+        "namespace": "myAnimations",
+        "id": "anim1",
+        "mimeType": "application/mkcd-animation",
+        "data": "NjQwMDBhMDAwYTAwMDQwMDAwMDAwMDAwMDAwMDIyMDAwMDAwMjAwMDAyMDAwMDAyMjAyMjAwMDAwNzIwMjIwMjAwMDAyMGYxMjIwMDAwMjAyMjAyMDAwMDIwMjIwNDAwMDAyMDIyMDIwMDAwMDAyMjAwMDAwMDAwMDAwMDAwMDAyMjAwMDAwMDIwMDAwMjAwMDAwMjIwMjIwMDAwMDcyMDIyMDIwMDAwMjBmMTIyMDAwMDIwMjIwMjA0MDAyMDIyNDQwMDAwMjAyMjAyMDAwMDAwMjIwMDAwMDAwMDAwMDAwMDAwMjIwMDAwMDAyMDAwMDIwMDAwMDIyMDIyMDAwMDA3MjAyMjAyMDAwMDIwZjEyMjAwMDAyMDIyMDIwNDAwMjAyMjU0MDAwMDIwMjI0MjA1MDAyMDAwMDIwMDAwMDAwMDAwMDAwMDIyMDAwMDAwMjAwMDAyMDAwMDAyMjAyMjAwMDAwNzIwMjIwMjAwMDAyMGYxMjIwMDAwMjAyMjAyMDAwMDIwMjI1NDAwMDAyMDIyNDIwMDAwMjAwMDAyMDA=",
+        "displayName": "myAnim"
+    },
+    "*": {
+        "mimeType": "image/x-mkcd-f4",
+        "dataEncoding": "base64",
+        "namespace": "myImages"
+    }
+}
