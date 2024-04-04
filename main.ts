@@ -269,25 +269,6 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
         characterAnimations.setCharacterAnimationsEnabled(Wilson, true)
     }
 })
-/**
- * TODO LIST:
- * 
- * - Room with Shannon's face in it (praise shannon)
- * 
- * - Drills? maybe? if we dont cover it up, or a loading screen
- * 
- * - Space out embedded treasure more aesthetically
- * 
- * - the deeper you go, the deeper you are
- * 
- * - Fix the snake Stack overflow
- * 
- * - BOMBS
- * 
- * - ROPES
- * 
- * - LEDGE HANGING
- */
 function generate_new_level () {
     for (let value of sprites.allOfKind(SpriteKind.Snake)) {
         sprites.destroy(value)
@@ -513,6 +494,25 @@ sprite_move_speed = 80
 damage_cooldown_time = 1200
 bomb_prime_time = 3000
 generate_new_level()
+/**
+ * TODO LIST:
+ * 
+ * - Room with Shannon's face in it (praise shannon)
+ * 
+ * - Drills? maybe? if we dont cover it up, or a loading screen
+ * 
+ * - Space out embedded treasure more aesthetically
+ * 
+ * - the deeper you go, the deeper you are
+ * 
+ * - Fix the snake Stack overflow
+ * 
+ * - BOMBS
+ * 
+ * - ROPES
+ * 
+ * - LEDGE HANGING
+ */
 game.onUpdate(function () {
     if (!(gameStarted) && 0 == sprites.allOfKind(SpriteKind.ZigZaggers).length) {
         gameStarted = true
