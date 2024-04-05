@@ -5,31 +5,6 @@ namespace SpriteKind {
     export const Bombs = SpriteKind.create()
     export const Effects = SpriteKind.create()
 }
-/**
- * TODAY TODO
- * 
- * - LEDGE HANGING
- */
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Snake, function (sprite, otherSprite) {
-    if (0 < sprite.vy && sprite.y < otherSprite.bottom) {
-        otherSprite.destroy()
-        spriteutils.jumpImpulse(sprite, 26)
-    } else {
-        if (sprites.readDataBoolean(sprite, "attacking")) {
-            otherSprite.destroy()
-        } else {
-            timer.throttle("damage", damage_cooldown_time, function () {
-                controller.moveSprite(sprite, 0, 0)
-                sprite.vx = 0
-                spriteutils.setVelocityAtAngle(sprite, spriteutils.angleFrom(otherSprite, sprite), 100)
-                lives += -1
-                game_over_check()
-                pause(damage_cooldown_time)
-                controller.moveSprite(sprite, sprite_move_speed, 0)
-            })
-        }
-    }
-})
 function BOOM (bomb: Sprite) {
     timer.after(bomb_prime_time, function () {
         for (let x = 0; x <= 4; x++) {
@@ -45,6 +20,7 @@ function BOOM (bomb: Sprite) {
         }
         for (let value of spriteutils.getSpritesWithin(SpriteKind.Snake, 32, bomb)) {
             value.destroy()
+            net_worth += 50
         }
         bomb.destroy()
         for (let index = 0; index < 10; index++) {
@@ -65,6 +41,35 @@ function BOOM (bomb: Sprite) {
         BombAm += -1
     })
 }
+controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (gameStarted) {
+        if (Wilson.isHittingTile(CollisionDirection.Bottom)) {
+            spriteutils.jumpImpulse(Wilson, 18)
+        }
+    }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Snake, function (sprite, otherSprite) {
+    if (0 < sprite.vy && sprite.y < otherSprite.bottom) {
+        otherSprite.destroy()
+        spriteutils.jumpImpulse(sprite, 26)
+        net_worth += sprites.readDataNumber(otherSprite, "value")
+    } else {
+        if (sprites.readDataBoolean(sprite, "attacking")) {
+            otherSprite.destroy()
+            net_worth += sprites.readDataNumber(otherSprite, "value")
+        } else {
+            timer.throttle("damage", damage_cooldown_time, function () {
+                controller.moveSprite(sprite, 0, 0)
+                sprite.vx = 0
+                spriteutils.setVelocityAtAngle(sprite, spriteutils.angleFrom(otherSprite, sprite), 100)
+                lives += -1
+                game_over_check()
+                pause(damage_cooldown_time)
+                controller.moveSprite(sprite, sprite_move_speed, 0)
+            })
+        }
+    }
+})
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     if (gameStarted && BombAm < 2) {
         BombAm += 1
@@ -84,17 +89,6 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
         bomb.ay = GRAVITY
         BOOM(bomb)
     }
-})
-controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (gameStarted) {
-        if (Wilson.isHittingTile(CollisionDirection.Bottom)) {
-            spriteutils.jumpImpulse(Wilson, 18)
-        }
-    }
-})
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Treasure, function (sprite, otherSprite) {
-    otherSprite.destroy()
-    net_worth += sprites.readDataNumber(otherSprite, "value")
 })
 spriteutils.createRenderable(100, function (screen2) {
     spriteutils.drawTransparentImage(img`
@@ -147,19 +141,6 @@ function get_tile_image (col: number, row: number) {
         }
     }
 }
-/**
- * TODO LIST:
- * 
- * - Drills? maybe? if we dont cover it up, or a loading screen
- * 
- * - Space out embedded treasure more aesthetically
- * 
- * - the deeper you go, the deeper you are
- * 
- * - ROPES
- * 
- * - LEDGE HANGING
- */
 function CreateStuffs () {
     for (let value of tiles.getTilesByType(assets.tile`transparency8`)) {
         if (rng.percentChance(1)) {
@@ -176,6 +157,7 @@ function CreateStuffs () {
             tiles.placeOnTile(new_snake, value)
             new_snake.ay = GRAVITY
             new_snake.vx = rng.randomElement([-1, 1]) * 10
+            sprites.setDataNumber(new_snake, "value", 50)
         } else if (rng.percentChance(1)) {
             new_treasure = sprites.create(img`
                 . . . . . . . 
@@ -376,6 +358,16 @@ scene.onHitWall(SpriteKind.ZigZaggers, function (sprite, location) {
         tiles.setTileAt(tiles.locationInDirection(location, CollisionDirection.Top), assets.tile`myTile0`)
     }
 })
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
+    gameStarted = false
+    depth_level += 1
+    sprite.destroy()
+    generate_new_level()
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Treasure, function (sprite, otherSprite) {
+    otherSprite.destroy()
+    net_worth += sprites.readDataNumber(otherSprite, "value")
+})
 scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
     if (gameStarted) {
         if (sprite.isHittingTile(CollisionDirection.Right) || sprite.isHittingTile(CollisionDirection.Left)) {
@@ -387,12 +379,6 @@ scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
             }
         }
     }
-})
-scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
-    gameStarted = false
-    depth_level += 1
-    sprite.destroy()
-    generate_new_level()
 })
 let end_room_height = 0
 let bricklayer: Sprite = null
@@ -549,8 +535,33 @@ sprite_move_speed = 80
 damage_cooldown_time = 1200
 bomb_prime_time = 3000
 generate_new_level()
+/**
+ * TODAY TODO
+ * 
+ * - LEDGE HANGING
+ */
+/**
+ * TODO LIST:
+ * 
+ * - Drills? maybe? if we dont cover it up, or a loading screen
+ * 
+ * - Space out embedded treasure more aesthetically
+ * 
+ * - the deeper you go, the deeper you are
+ * 
+ * - Fix the snake Stack overflow
+ * 
+ * - BOMBS
+ * 
+ * - ROPES
+ * 
+ * - LEDGE HANGING
+ */
 game.onUpdate(function () {
     if (!(gameStarted) && 0 == sprites.allOfKind(SpriteKind.ZigZaggers).length) {
+        for (let value of sprites.allOfKind(SpriteKind.Snake)) {
+            sprites.destroy(value)
+        }
         gameStarted = true
         for (let value of tiles.getTilesByType(assets.tile`tile4`)) {
             tiles.setWallAt(value, true)
