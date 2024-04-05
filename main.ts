@@ -20,7 +20,10 @@ function BOOM (bomb: Sprite) {
         }
         for (let value of spriteutils.getSpritesWithin(SpriteKind.Player, 32, bomb)) {
             scene.cameraShake(4, 500)
-            info.changeLifeBy(-1)
+            lives += -1
+        }
+        for (let value of spriteutils.getSpritesWithin(SpriteKind.Snake, 32, bomb)) {
+            value.destroy()
         }
         bomb.destroy()
         for (let index = 0; index < 10; index++) {
@@ -134,6 +137,58 @@ function get_tile_image (col: number, row: number) {
             return assets.tile`tile11`
         } else {
             return assets.tile`tile4`
+        }
+    }
+}
+/**
+ * TODO LIST:
+ * 
+ * - Room with Shannon's face in it (praise shannon)
+ * 
+ * - Drills? maybe? if we dont cover it up, or a loading screen
+ * 
+ * - Space out embedded treasure more aesthetically
+ * 
+ * - the deeper you go, the deeper you are
+ * 
+ * - Fix the snake Stack overflow
+ * 
+ * - BOMBS
+ * 
+ * - ROPES
+ * 
+ * - LEDGE HANGING
+ */
+function CreateStuffs () {
+    for (let value of tiles.getTilesByType(assets.tile`transparency8`)) {
+        if (rng.percentChance(1)) {
+            new_snake = sprites.create(img`
+                . . . . . . . . 
+                . . . . . . . . 
+                . . . . . . . . 
+                . . . . . . . . 
+                7 7 . . . . . . 
+                f 7 7 . . . . . 
+                . 6 7 7 . 7 7 7 
+                . . 6 7 7 6 6 6 
+                `, SpriteKind.Snake)
+            tiles.placeOnTile(new_snake, value)
+            new_snake.ay = GRAVITY
+            new_snake.vx = rng.randomElement([-1, 1]) * 10
+        } else if (rng.percentChance(1)) {
+            new_treasure = sprites.create(img`
+                . . . . . . . 
+                . . . . . . . 
+                . . . . . . . 
+                . . . . . . . 
+                . . 5 4 1 . . 
+                . . 4 4 4 . . 
+                . 5 5 4 5 1 . 
+                2 2 4 4 4 5 1 
+                `, SpriteKind.Treasure)
+            tiles.placeOnTile(new_treasure, value)
+            new_treasure.ay = GRAVITY
+            sprites.setDataNumber(new_treasure, "value", 100)
         }
     }
 }
@@ -340,8 +395,6 @@ scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
         }
     }
 })
-let new_treasure: Sprite = null
-let new_snake: Sprite = null
 let end_room_height = 0
 let bricklayer: Sprite = null
 let width_of_room = 0
@@ -349,6 +402,8 @@ let height_of_room = 0
 let top_of_level_door: tiles.Location = null
 let level: tiles.WorldMap = null
 let offshoot_bricklayer: Sprite = null
+let new_treasure: Sprite = null
+let new_snake: Sprite = null
 let rng: FastRandomBlocks = null
 let Wilson: Sprite = null
 let gameStarted = false
@@ -494,62 +549,12 @@ sprite_move_speed = 80
 damage_cooldown_time = 1200
 bomb_prime_time = 3000
 generate_new_level()
-/**
- * TODO LIST:
- * 
- * - Room with Shannon's face in it (praise shannon)
- * 
- * - Drills? maybe? if we dont cover it up, or a loading screen
- * 
- * - Space out embedded treasure more aesthetically
- * 
- * - the deeper you go, the deeper you are
- * 
- * - Fix the snake Stack overflow
- * 
- * - BOMBS
- * 
- * - ROPES
- * 
- * - LEDGE HANGING
- */
 game.onUpdate(function () {
     if (!(gameStarted) && 0 == sprites.allOfKind(SpriteKind.ZigZaggers).length) {
         gameStarted = true
         for (let value of tiles.getTilesByType(assets.tile`tile4`)) {
             tiles.setWallAt(value, true)
             tiles.setTileAt(value, get_tile_image(tiles.locationXY(value, tiles.XY.column), tiles.locationXY(value, tiles.XY.row)))
-        }
-        for (let value of tiles.getTilesByType(assets.tile`transparency8`)) {
-            if (rng.percentChance(1)) {
-                new_snake = sprites.create(img`
-                    . . . . . . . . 
-                    . . . . . . . . 
-                    . . . . . . . . 
-                    . . . . . . . . 
-                    7 7 . . . . . . 
-                    f 7 7 . . . . . 
-                    . 6 7 7 . 7 7 7 
-                    . . 6 7 7 6 6 6 
-                    `, SpriteKind.Snake)
-                tiles.placeOnTile(new_snake, value)
-                new_snake.ay = GRAVITY
-                new_snake.vx = rng.randomElement([-1, 1]) * 10
-            } else if (rng.percentChance(1)) {
-                new_treasure = sprites.create(img`
-                    . . . . . . . 
-                    . . . . . . . 
-                    . . . . . . . 
-                    . . . . . . . 
-                    . . 5 4 1 . . 
-                    . . 4 4 4 . . 
-                    . 5 5 4 5 1 . 
-                    2 2 4 4 4 5 1 
-                    `, SpriteKind.Treasure)
-                tiles.placeOnTile(new_treasure, value)
-                new_treasure.ay = GRAVITY
-                sprites.setDataNumber(new_treasure, "value", 100)
-            }
         }
         Wilson = sprites.create(img`
             . . . . . . . . . . 
@@ -567,6 +572,7 @@ game.onUpdate(function () {
         scene.cameraFollowSprite(Wilson)
         controller.moveSprite(Wilson, sprite_move_speed, 0)
         Wilson.ay = GRAVITY
+        CreateStuffs()
         characterAnimations.loopFrames(
         Wilson,
         [img`
