@@ -10,6 +10,26 @@ namespace SpriteKind {
  * 
  * - LEDGE HANGING
  */
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Snake, function (sprite, otherSprite) {
+    if (0 < sprite.vy && sprite.y < otherSprite.bottom) {
+        otherSprite.destroy()
+        spriteutils.jumpImpulse(sprite, 26)
+    } else {
+        if (sprites.readDataBoolean(sprite, "attacking")) {
+            otherSprite.destroy()
+        } else {
+            timer.throttle("damage", damage_cooldown_time, function () {
+                controller.moveSprite(sprite, 0, 0)
+                sprite.vx = 0
+                spriteutils.setVelocityAtAngle(sprite, spriteutils.angleFrom(otherSprite, sprite), 100)
+                lives += -1
+                game_over_check()
+                pause(damage_cooldown_time)
+                controller.moveSprite(sprite, sprite_move_speed, 0)
+            })
+        }
+    }
+})
 function BOOM (bomb: Sprite) {
     timer.after(bomb_prime_time, function () {
         for (let x = 0; x <= 4; x++) {
@@ -21,6 +41,7 @@ function BOOM (bomb: Sprite) {
         for (let value of spriteutils.getSpritesWithin(SpriteKind.Player, 32, bomb)) {
             scene.cameraShake(4, 500)
             lives += -1
+            game_over_check()
         }
         for (let value of spriteutils.getSpritesWithin(SpriteKind.Snake, 32, bomb)) {
             value.destroy()
@@ -41,8 +62,29 @@ function BOOM (bomb: Sprite) {
             new_effect.lifespan = 300
             new_effect.setFlag(SpriteFlag.DestroyOnWall, true)
         }
+        BombAm += -1
     })
 }
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (gameStarted && BombAm < 2) {
+        BombAm += 1
+        bomb = sprites.create(img`
+            f c c f 
+            c c b c 
+            c c c c 
+            f c c f 
+            `, SpriteKind.Bombs)
+        spriteutils.placeAngleFrom(
+        bomb,
+        0,
+        0,
+        Wilson
+        )
+        bomb.startEffect(effects.warmRadial, bomb_prime_time)
+        bomb.ay = GRAVITY
+        BOOM(bomb)
+    }
+})
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (gameStarted) {
         if (Wilson.isHittingTile(CollisionDirection.Bottom)) {
@@ -50,25 +92,9 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
         }
     }
 })
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Snake, function (sprite, otherSprite) {
-    if (0 < sprite.vy && sprite.y < otherSprite.bottom) {
-        otherSprite.destroy()
-        spriteutils.jumpImpulse(sprite, 26)
-    } else {
-        if (sprites.readDataBoolean(sprite, "attacking")) {
-            otherSprite.destroy()
-        } else {
-            timer.throttle("damage", damage_cooldown_time, function () {
-                controller.moveSprite(sprite, 0, 0)
-                sprite.vx = 0
-                spriteutils.setVelocityAtAngle(sprite, spriteutils.angleFrom(otherSprite, sprite), 100)
-                lives += -1
-                game_over_check()
-                pause(damage_cooldown_time)
-                controller.moveSprite(sprite, sprite_move_speed, 0)
-            })
-        }
-    }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Treasure, function (sprite, otherSprite) {
+    otherSprite.destroy()
+    net_worth += sprites.readDataNumber(otherSprite, "value")
 })
 spriteutils.createRenderable(100, function (screen2) {
     spriteutils.drawTransparentImage(img`
@@ -94,25 +120,6 @@ function game_over_check () {
         game.over(false)
     }
 }
-controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (true) {
-        bomb = sprites.create(img`
-            f c c f 
-            c c b c 
-            c c c c 
-            f c c f 
-            `, SpriteKind.Bombs)
-        spriteutils.placeAngleFrom(
-        bomb,
-        0,
-        0,
-        Wilson
-        )
-        bomb.startEffect(effects.warmRadial, bomb_prime_time)
-        bomb.ay = GRAVITY
-        BOOM(bomb)
-    }
-})
 function get_tile_image (col: number, row: number) {
     if (tiles.tileAtLocationEquals(tiles.locationInDirection(tiles.getTileLocation(col, row), CollisionDirection.Left), assets.tile`transparency8`) && tiles.tileAtLocationEquals(tiles.locationInDirection(tiles.getTileLocation(col, row), CollisionDirection.Top), assets.tile`transparency8`)) {
         return assets.tile`tile12`
@@ -143,17 +150,11 @@ function get_tile_image (col: number, row: number) {
 /**
  * TODO LIST:
  * 
- * - Room with Shannon's face in it (praise shannon)
- * 
  * - Drills? maybe? if we dont cover it up, or a loading screen
  * 
  * - Space out embedded treasure more aesthetically
  * 
  * - the deeper you go, the deeper you are
- * 
- * - Fix the snake Stack overflow
- * 
- * - BOMBS
  * 
  * - ROPES
  * 
@@ -375,25 +376,23 @@ scene.onHitWall(SpriteKind.ZigZaggers, function (sprite, location) {
         tiles.setTileAt(tiles.locationInDirection(location, CollisionDirection.Top), assets.tile`myTile0`)
     }
 })
+scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
+    if (gameStarted) {
+        if (sprite.isHittingTile(CollisionDirection.Right) || sprite.isHittingTile(CollisionDirection.Left)) {
+            sprite.vx = sprite.vx * -1
+            if (sprite.vx < 0) {
+                sprite.x += -1
+            } else {
+                sprite.x += 1
+            }
+        }
+    }
+})
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
     gameStarted = false
     depth_level += 1
     sprite.destroy()
     generate_new_level()
-})
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Treasure, function (sprite, otherSprite) {
-    otherSprite.destroy()
-    net_worth += sprites.readDataNumber(otherSprite, "value")
-})
-scene.onHitWall(SpriteKind.Snake, function (sprite, location) {
-    if (sprite.isHittingTile(CollisionDirection.Right) || sprite.isHittingTile(CollisionDirection.Left)) {
-        sprite.vx = sprite.vx * -1
-        if (sprite.vx < 0) {
-            sprite.x += -1
-        } else {
-            sprite.x += 1
-        }
-    }
 })
 let end_room_height = 0
 let bricklayer: Sprite = null
@@ -407,6 +406,7 @@ let new_snake: Sprite = null
 let rng: FastRandomBlocks = null
 let Wilson: Sprite = null
 let gameStarted = false
+let BombAm = 0
 let new_effect: Sprite = null
 let bomb: Sprite = null
 let bomb_prime_time = 0
